@@ -11,15 +11,15 @@ AnimatorStateMachine:
   m_ChildStates:
   - serializedVersion: 1
     m_State: {fileID: -1171330508639832653}
-    m_Position: {x: 360, y: 90, z: 0}
+    m_Position: {x: 1500, y: -20, z: 0}
   m_ChildStateMachines: []
   m_AnyStateTransitions: []
   m_EntryTransitions: []
   m_StateMachineTransitions: {}
   m_StateMachineBehaviours: []
-  m_AnyStatePosition: {x: 100, y: 20, z: 0}
-  m_EntryPosition: {x: 50, y: 120, z: 0}
-  m_ExitPosition: {x: 800, y: 120, z: 0}
+  m_AnyStatePosition: {x: 900, y: 200, z: 0}
+  m_EntryPosition: {x: 1300, y: 210, z: 0}
+  m_ExitPosition: {x: 1290, y: 320, z: 0}
   m_ParentStateMachinePosition: {x: 800, y: 20, z: 0}
   m_DefaultState: {fileID: -1171330508639832653}
 --- !u!1102 &-1171330508639832653
