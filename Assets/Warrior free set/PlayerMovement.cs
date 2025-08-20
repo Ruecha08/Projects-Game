@@ -3,7 +3,7 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     public float moveSpeed = 5f;
-    public float jumpForce = 15f;
+    public float jumpForce = 7f;
     
     // ตัวแปรสำหรับ Dash
     public float dashSpeed = 15f;
@@ -11,12 +11,21 @@ public class PlayerMovement : MonoBehaviour
     public float dashCooldown = 1f;
 
     // ตัวแปรสำหรับ Attack Cooldown
-    public float attackCooldown = 1.0f; // กำหนดเวลา cooldown ของการคลิกซ้าย
+    public float attackCooldown = 2.0f;
     private float lastAttackTime;
 
     // ตัวแปรสำหรับ Q-Attack Cooldown
-    public float qAttackCooldown = 3.5f; // กำหนดเวลา cooldown ของการโจมตีด้วยปุ่ม Q
+    public float qAttackCooldown = 3.5f;
     private float lastQAttackTime;
+    
+    // ตัวแปรสำหรับปีน
+    public float climbSpeed = 3f;
+    private bool isClimbing = false;
+    private float climbInput;
+    private bool isOnLadder = false;
+    
+    // ตัวแปรสำหรับแรงโน้มถ่วงปกติ
+    public float normalGravity = 2.5f; 
     
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private Transform groundCheck;
@@ -33,80 +42,90 @@ public class PlayerMovement : MonoBehaviour
     private bool isDashing;
     private float dashTime;
     private float lastDashTime;
+    
+    // ตัวแปรสำหรับพื้นที่ห้ามกระโดด
+    private bool isInNoJumpZone = false;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
-        // กำหนดเวลาเริ่มต้นให้โจมตีได้ทันที
         lastAttackTime = -attackCooldown;
         lastQAttackTime = -qAttackCooldown;
     }
 
     void Update()
     {
-        // การตรวจจับการพุ่งตัว
+        // ตรวจสอบการพุ่งตัว
         if (Input.GetKeyDown(KeyCode.LeftShift) && Time.time >= lastDashTime + dashCooldown)
         {
             StartDash();
         }
 
-        // หากอยู่ในสถานะพุ่งตัว
+        // หากกำลัง Dash ให้หยุดการทำงานของโค้ดอื่น
         if (isDashing)
         {
-            // นับเวลาถอยหลังการพุ่งตัว
             if (dashTime > 0)
             {
-                // เคลื่อนที่ด้วยความเร็วพุ่งตัว
                 rb.velocity = new Vector2(spriteRenderer.flipX ? -dashSpeed : dashSpeed, 0);
                 dashTime -= Time.deltaTime;
             }
             else
             {
-                // หยุดการพุ่งตัว
                 StopDash();
             }
+            return;
         }
-        else // หากไม่อยู่ในสถานะพุ่งตัว
+
+        // โค้ดการปีน
+        if (isClimbing)
         {
-            // ตรวจสอบการติดพื้น
-            isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
-
-            // การเคลื่อนที่ซ้าย-ขวา
-            moveInput = Input.GetAxisRaw("Horizontal");
-            rb.velocity = new Vector2(moveInput * moveSpeed, rb.velocity.y);
-
-            // สลับการหันซ้าย-ขวา
-            if (moveInput > 0) spriteRenderer.flipX = false;
-            else if (moveInput < 0) spriteRenderer.flipX = true;
-
-            // กระโดด
-            if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
-            {
-                rb.velocity = new Vector2(rb.velocity.x, jumpForce);
-            }
-
-            // โจมตีด้วยการคลิกซ้าย พร้อม Cooldown
-            if (Input.GetMouseButtonDown(0) && isGrounded && Time.time >= lastAttackTime + attackCooldown)
-            {
-                animator.SetTrigger("Attack");
-                lastAttackTime = Time.time;
-            }
-
-            // โจมตีด้วยปุ่ม Q พร้อม Cooldown
-            if (Input.GetKeyDown(KeyCode.Q) && isGrounded && Time.time >= lastQAttackTime + qAttackCooldown)
-            {
-                animator.SetTrigger("QAttack");
-                lastQAttackTime = Time.time;
-            }
+            climbInput = Input.GetAxisRaw("Vertical");
+            rb.velocity = new Vector2(rb.velocity.x, climbInput * climbSpeed);
+            animator.SetBool("isClimbing", true);
+            animator.SetFloat("climbSpeed", Mathf.Abs(climbInput));
+            rb.gravityScale = 0;
+            return;
+        }
+        else
+        {
+            rb.gravityScale = normalGravity; // ใช้ตัวแปร normalGravity ที่เราสร้างขึ้น
         }
 
-        // ส่งค่าไป Animator ตามตาราง
+        // โค้ดการเคลื่อนที่ปกติ
+        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
+        moveInput = Input.GetAxisRaw("Horizontal");
+        rb.velocity = new Vector2(moveInput * moveSpeed, rb.velocity.y);
+
+        if (moveInput > 0) spriteRenderer.flipX = false;
+        else if (moveInput < 0) spriteRenderer.flipX = true;
+
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded && !isInNoJumpZone)
+        {
+            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+        }
+
+        // โจมตีด้วยการคลิกซ้าย
+        if (Input.GetMouseButtonDown(0) && isGrounded && Time.time >= lastAttackTime + attackCooldown)
+        {
+            animator.SetTrigger("Attack");
+            lastAttackTime = Time.time;
+        }
+
+        // โจมตีด้วยปุ่ม Q
+        if (Input.GetKeyDown(KeyCode.Q) && isGrounded && Time.time >= lastQAttackTime + qAttackCooldown)
+        {
+            animator.SetTrigger("QAttack");
+            lastQAttackTime = Time.time;
+        }
+    
+        // ส่งค่าไป Animator
         animator.SetBool("isplayerRun", moveInput != 0);
         animator.SetBool("isGrounded", isGrounded);
         animator.SetFloat("yVelocity", rb.velocity.y);
         animator.SetBool("isFalling", !isGrounded && rb.velocity.y < -0.1f);
+        animator.SetBool("isClimbing", false);
     }
     
     // ฟังก์ชันเริ่มการพุ่งตัว
@@ -115,20 +134,19 @@ public class PlayerMovement : MonoBehaviour
         isDashing = true;
         dashTime = dashDuration;
         lastDashTime = Time.time;
-        animator.SetBool("isDashing", true); // ตั้งค่า Parameter ใน Animator
+        animator.SetBool("isDashing", true);
     }
     
     // ฟังก์ชันหยุดการพุ่งตัว
     void StopDash()
     {
         isDashing = false;
-        rb.velocity = Vector2.zero; // ทำให้ความเร็วเป็นศูนย์เพื่อหยุดการพุ่งตัวทันที
-        animator.SetBool("isDashing", false); // ตั้งค่า Parameter ใน Animator
+        rb.velocity = Vector2.zero;
+        animator.SetBool("isDashing", false);
     }
 
     void FixedUpdate()
     {
-        // ตรวจสอบการติดพื้นซ้ำ (ป้องกัน delay)
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
     }
 
@@ -138,6 +156,48 @@ public class PlayerMovement : MonoBehaviour
         {
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
+        }
+    }
+
+    public bool IsDashing()
+    {
+        return isDashing;
+    }
+
+    // ฟังก์ชัน Trigger
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("NoJumpZone"))
+        {
+            isInNoJumpZone = true;
+        }
+        else if (other.CompareTag("Ladder"))
+        {
+            isOnLadder = true;
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        if (other.CompareTag("NoJumpZone"))
+        {
+            isInNoJumpZone = false;
+        }
+        else if (other.CompareTag("Ladder"))
+        {
+            isOnLadder = false;
+            isClimbing = false;
+        }
+    }
+
+    private void OnTriggerStay2D(Collider2D other)
+    {
+        if (other.CompareTag("Ladder") && isOnLadder)
+        {
+            if (Input.GetAxisRaw("Vertical") != 0)
+            {
+                isClimbing = true;
+            }
         }
     }
 }
