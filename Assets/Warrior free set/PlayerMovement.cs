@@ -1,4 +1,7 @@
 using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine.UI;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -46,6 +49,12 @@ public class PlayerMovement : MonoBehaviour
     // ตัวแปรสำหรับพื้นที่ห้ามกระโดด
     private bool isInNoJumpZone = false;
 
+    // เพิ่มตัวแปรเหล่านี้
+    public int attackDamage = 20; // ความเสียหายจากการโจมตี
+    public float attackRange = 1f; // ระยะการโจมตี
+    public LayerMask enemyLayer; // Layer สำหรับศัตรู
+    
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -90,7 +99,7 @@ public class PlayerMovement : MonoBehaviour
         }
         else
         {
-            rb.gravityScale = normalGravity; // ใช้ตัวแปร normalGravity ที่เราสร้างขึ้น
+            rb.gravityScale = normalGravity;
         }
 
         // โค้ดการเคลื่อนที่ปกติ
@@ -158,13 +167,38 @@ public class PlayerMovement : MonoBehaviour
             Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
         }
     }
+    
+    // เพิ่มเมธอดนี้เข้ามา
+    void DealDamage()
+    {
+        Vector2 attackPosition = transform.position;
+        // ปรับตำแหน่งการโจมตีให้สอดคล้องกับทิศทางที่ผู้เล่นหันหน้าไป
+        if (spriteRenderer.flipX)
+        {
+            attackPosition.x -= attackRange;
+        }
+        else
+        {
+            attackPosition.x += attackRange;
+        }
+
+        Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPosition, attackRange, enemyLayer);
+
+        foreach (Collider2D enemy in hitEnemies)
+        {
+            Health enemyHealth = enemy.GetComponent<Health>();
+            if (enemyHealth != null)
+            {
+                enemyHealth.TakeDamage(attackDamage);
+            }
+        }
+    }
 
     public bool IsDashing()
     {
         return isDashing;
     }
 
-    // ฟังก์ชัน Trigger
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("NoJumpZone"))
