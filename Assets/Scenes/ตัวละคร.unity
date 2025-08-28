@@ -1384,7 +1384,7 @@ GameObject:
   m_Component:
   - component: {fileID: 290293531}
   - component: {fileID: 290293532}
-  m_Layer: 5
+  m_Layer: 8
   m_Name: EnemyHealthBar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1398,9 +1398,9 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 290293530}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: -0.03, y: 0.05, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1078137441}
@@ -1410,7 +1410,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -445, y: -262}
+  m_AnchoredPosition: {x: -399.76, y: -185.48}
   m_SizeDelta: {x: 160, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &290293532
@@ -2099,6 +2099,64 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!1 &560029346
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 560029347}
+  - component: {fileID: 560029348}
+  m_Layer: 0
+  m_Name: AttackZone
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &560029347
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 560029346}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.01, y: -0.009, z: -2.2142437}
+  m_LocalScale: {x: 0.31269988, y: 0.281611, z: 0.2236286}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 866327616}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!61 &560029348
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 560029346}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 1, y: 1}
+  m_EdgeRadius: 0
 --- !u!1 &587575502
 GameObject:
   m_ObjectHideFlags: 0
@@ -3588,7 +3646,7 @@ GameObject:
   - component: {fileID: 866327612}
   - component: {fileID: 866327611}
   - component: {fileID: 866327610}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Golem
   m_TagString: Enemy
   m_Icon: {fileID: 0}
@@ -3609,6 +3667,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 2
   patrolRange: 5
+  chaseRange: 8
+  attackRange: 1.5
+  attackCooldown: 2
+  attackDamage: 10
 --- !u!114 &866327611
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3633,7 +3695,7 @@ Animator:
   m_GameObject: {fileID: 866327609}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: de73cdbd51b1a4e429a03c2fe0f351a1, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -3664,7 +3726,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 0
+  m_Constraints: 4
 --- !u!61 &866327614
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -3678,7 +3740,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.0035492852, y: -0.021294922}
+  m_Offset: {x: -0.0035492778, y: -0.015053485}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -3689,7 +3751,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 0.29928184, y: 0.29218405}
+  m_Size: {x: 0.29928184, y: 0.27970117}
   m_EdgeRadius: 0
 --- !u!212 &866327615
 SpriteRenderer:
@@ -3756,6 +3818,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1434353919}
+  - {fileID: 560029347}
   m_Father: {fileID: 0}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -4275,7 +4338,7 @@ GameObject:
   - component: {fileID: 1078137441}
   - component: {fileID: 1078137443}
   - component: {fileID: 1078137442}
-  m_Layer: 5
+  m_Layer: 8
   m_Name: Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4350,7 +4413,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1081059141}
   - component: {fileID: 1081059142}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: attackPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4402,9 +4465,10 @@ GameObject:
   - component: {fileID: 1098624879}
   - component: {fileID: 1098624883}
   - component: {fileID: 1098624885}
-  m_Layer: 0
+  - component: {fileID: 1098624886}
+  m_Layer: 7
   m_Name: PLayer
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -4440,7 +4504,7 @@ BoxCollider2D:
   m_Enabled: 1
   m_Density: 1
   m_Material: {fileID: 0}
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
   m_Offset: {x: -0.075232625, y: -0.041642085}
@@ -4576,7 +4640,33 @@ MonoBehaviour:
   attackRange: 2
   enemyLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 256
+--- !u!61 &1098624886
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1098624877}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: -0.074792884, y: -0.04139908}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 0.69, y: 0.44}
+    newSize: {x: 0.69, y: 0.44}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 0.1797704, y: 0.3265358}
+  m_EdgeRadius: 0
 --- !u!1 &1108264052
 GameObject:
   m_ObjectHideFlags: 0
@@ -4586,7 +4676,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1108264053}
-  m_Layer: 6
+  m_Layer: 7
   m_Name: GroundCheck
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5616,7 +5706,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1300924071}
-  m_Layer: 5
+  m_Layer: 8
   m_Name: Fill Area
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6058,7 +6148,7 @@ GameObject:
   - component: {fileID: 1434353918}
   - component: {fileID: 1434353917}
   - component: {fileID: 1434353916}
-  m_Layer: 5
+  m_Layer: 8
   m_Name: Canvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6104,7 +6194,7 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
-  m_PresetInfoIsWorld: 0
+  m_PresetInfoIsWorld: 1
 --- !u!223 &1434353918
 Canvas:
   m_ObjectHideFlags: 0
@@ -6114,7 +6204,7 @@ Canvas:
   m_GameObject: {fileID: 1434353915}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 0
+  m_RenderMode: 2
   m_Camera: {fileID: 0}
   m_PlaneDistance: 100
   m_PixelPerfect: 0
@@ -6134,9 +6224,9 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1434353915}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.2236286, y: 0.2236286, z: 0.2236286}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 290293531}
@@ -6145,9 +6235,9 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
-  m_Pivot: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 89.36423, y: 41.69108}
+  m_SizeDelta: {x: 880.4, y: 386}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1539339790
 GameObject:
   m_ObjectHideFlags: 0
@@ -7491,7 +7581,7 @@ GameObject:
   - component: {fileID: 1817361040}
   - component: {fileID: 1817361042}
   - component: {fileID: 1817361041}
-  m_Layer: 5
+  m_Layer: 8
   m_Name: Fill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -7531,7 +7621,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.690566, g: 0.12536792, b: 0.019544203, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

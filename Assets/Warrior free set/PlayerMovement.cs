@@ -1,6 +1,6 @@
 using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
+using System.Collections.Generic; // **เพิ่มบรรทัดนี้เพื่อใช้งาน HashSet**
 using UnityEngine.UI;
 
 public class PlayerMovement : MonoBehaviour
@@ -120,6 +120,7 @@ public class PlayerMovement : MonoBehaviour
         {
             animator.SetTrigger("Attack");
             lastAttackTime = Time.time;
+            DealDamage(); 
         }
 
         // โจมตีด้วยปุ่ม Q
@@ -127,6 +128,7 @@ public class PlayerMovement : MonoBehaviour
         {
             animator.SetTrigger("QAttack");
             lastQAttackTime = Time.time;
+            DealDamage();
         }
     
         // ส่งค่าไป Animator
@@ -136,7 +138,7 @@ public class PlayerMovement : MonoBehaviour
         animator.SetBool("isFalling", !isGrounded && rb.velocity.y < -0.1f);
         animator.SetBool("isClimbing", false);
     }
-    
+
     // ฟังก์ชันเริ่มการพุ่งตัว
     void StartDash()
     {
@@ -183,13 +185,24 @@ public class PlayerMovement : MonoBehaviour
         }
 
         Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPosition, attackRange, enemyLayer);
+        
+        // สร้าง HashSet เพื่อเก็บ GameObject ของศัตรูที่ถูกโจมตีไปแล้ว
+        HashSet<GameObject> hitObjects = new HashSet<GameObject>();
 
-        foreach (Collider2D enemy in hitEnemies)
+        foreach (Collider2D enemyCollider in hitEnemies)
         {
-            Health enemyHealth = enemy.GetComponent<Health>();
+            // ถ้า GameObject ของศัตรูนี้ถูกเพิ่มเข้าไปใน HashSet แล้ว ให้ข้ามไป
+            if (hitObjects.Contains(enemyCollider.gameObject))
+            {
+                continue;
+            }
+
+            Health enemyHealth = enemyCollider.GetComponent<Health>();
             if (enemyHealth != null)
             {
                 enemyHealth.TakeDamage(attackDamage);
+                // เพิ่ม GameObject ของศัตรูลงใน HashSet เพื่อป้องกันการทำดาเมจซ้ำ
+                hitObjects.Add(enemyCollider.gameObject);
             }
         }
     }
