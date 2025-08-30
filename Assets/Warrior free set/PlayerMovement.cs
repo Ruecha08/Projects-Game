@@ -1,35 +1,30 @@
 using UnityEngine;
 using System.Collections;
-using System.Collections.Generic; // **เพิ่มบรรทัดนี้เพื่อใช้งาน HashSet**
+using System.Collections.Generic;
 using UnityEngine.UI;
 
 public class PlayerMovement : MonoBehaviour
 {
     public float moveSpeed = 5f;
     public float jumpForce = 7f;
-    
-    // ตัวแปรสำหรับ Dash
+
     public float dashSpeed = 15f;
     public float dashDuration = 0.2f;
     public float dashCooldown = 1f;
 
-    // ตัวแปรสำหรับ Attack Cooldown
     public float attackCooldown = 2.0f;
     private float lastAttackTime;
 
-    // ตัวแปรสำหรับ Q-Attack Cooldown
     public float qAttackCooldown = 3.5f;
     private float lastQAttackTime;
-    
-    // ตัวแปรสำหรับปีน
+
     public float climbSpeed = 3f;
     private bool isClimbing = false;
     private float climbInput;
     private bool isOnLadder = false;
-    
-    // ตัวแปรสำหรับแรงโน้มถ่วงปกติ
-    public float normalGravity = 2.5f; 
-    
+
+    public float normalGravity = 2.5f;
+
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private Transform groundCheck;
     [SerializeField] private float groundCheckRadius = 0.2f;
@@ -40,20 +35,23 @@ public class PlayerMovement : MonoBehaviour
 
     private bool isGrounded;
     private float moveInput;
-    
-    // ตัวแปรสำหรับ Dash
+
     private bool isDashing;
     private float dashTime;
     private float lastDashTime;
-    
-    // ตัวแปรสำหรับพื้นที่ห้ามกระโดด
+
     private bool isInNoJumpZone = false;
 
-    // เพิ่มตัวแปรเหล่านี้
-    public int attackDamage = 20; // ความเสียหายจากการโจมตี
-    public float attackRange = 1f; // ระยะการโจมตี
-    public LayerMask enemyLayer; // Layer สำหรับศัตรู
-    
+    public int attackDamage = 20;
+    public float attackRange = 1f;
+    public LayerMask enemyLayer;
+
+    // เพิ่มตัวแปรสำหรับจุดโจมตีของผู้เล่น
+    public Transform attackPoint;
+
+    [Header("Stun Settings")]
+    public float stunDuration = 2f;
+    public GameObject stunEffectPrefab;
 
     void Start()
     {
@@ -66,13 +64,12 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
-        // ตรวจสอบการพุ่งตัว
+        // Dash
         if (Input.GetKeyDown(KeyCode.LeftShift) && Time.time >= lastDashTime + dashCooldown)
         {
             StartDash();
         }
 
-        // หากกำลัง Dash ให้หยุดการทำงานของโค้ดอื่น
         if (isDashing)
         {
             if (dashTime > 0)
@@ -87,7 +84,7 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
-        // โค้ดการปีน
+        // Climb
         if (isClimbing)
         {
             climbInput = Input.GetAxisRaw("Vertical");
@@ -102,36 +99,45 @@ public class PlayerMovement : MonoBehaviour
             rb.gravityScale = normalGravity;
         }
 
-        // โค้ดการเคลื่อนที่ปกติ
+        // Move
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
         moveInput = Input.GetAxisRaw("Horizontal");
         rb.velocity = new Vector2(moveInput * moveSpeed, rb.velocity.y);
 
-        if (moveInput > 0) spriteRenderer.flipX = false;
-        else if (moveInput < 0) spriteRenderer.flipX = true;
+        // แก้ไข: เปลี่ยนการพลิกตัวจาก SpriteRenderer เป็น Transform
+        if (moveInput > 0 && transform.localScale.x < 0)
+        {
+            Vector3 newScale = transform.localScale;
+            newScale.x *= -1;
+            transform.localScale = newScale;
+        }
+        else if (moveInput < 0 && transform.localScale.x > 0)
+        {
+            Vector3 newScale = transform.localScale;
+            newScale.x *= -1;
+            transform.localScale = newScale;
+        }
 
         if (Input.GetKeyDown(KeyCode.Space) && isGrounded && !isInNoJumpZone)
         {
             rb.velocity = new Vector2(rb.velocity.x, jumpForce);
         }
 
-        // โจมตีด้วยการคลิกซ้าย
+        // Attack with Left Click
         if (Input.GetMouseButtonDown(0) && isGrounded && Time.time >= lastAttackTime + attackCooldown)
         {
             animator.SetTrigger("Attack");
             lastAttackTime = Time.time;
-            DealDamage(); 
         }
 
-        // โจมตีด้วยปุ่ม Q
+        // Q Attack (สร้างดาเมจ + Stun)
         if (Input.GetKeyDown(KeyCode.Q) && isGrounded && Time.time >= lastQAttackTime + qAttackCooldown)
         {
             animator.SetTrigger("QAttack");
             lastQAttackTime = Time.time;
-            DealDamage();
         }
-    
-        // ส่งค่าไป Animator
+
+        // Animator states
         animator.SetBool("isplayerRun", moveInput != 0);
         animator.SetBool("isGrounded", isGrounded);
         animator.SetFloat("yVelocity", rb.velocity.y);
@@ -139,7 +145,6 @@ public class PlayerMovement : MonoBehaviour
         animator.SetBool("isClimbing", false);
     }
 
-    // ฟังก์ชันเริ่มการพุ่งตัว
     void StartDash()
     {
         isDashing = true;
@@ -147,8 +152,7 @@ public class PlayerMovement : MonoBehaviour
         lastDashTime = Time.time;
         animator.SetBool("isDashing", true);
     }
-    
-    // ฟังก์ชันหยุดการพุ่งตัว
+
     void StopDash()
     {
         isDashing = false;
@@ -168,41 +172,67 @@ public class PlayerMovement : MonoBehaviour
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
         }
-    }
-    
-    // เพิ่มเมธอดนี้เข้ามา
-    void DealDamage()
-    {
-        Vector2 attackPosition = transform.position;
-        // ปรับตำแหน่งการโจมตีให้สอดคล้องกับทิศทางที่ผู้เล่นหันหน้าไป
-        if (spriteRenderer.flipX)
+        
+        // วาด Gizmos วงกลมโจมตีที่ตำแหน่ง AttackPoint
+        if (attackPoint != null)
         {
-            attackPosition.x -= attackRange;
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(attackPoint.position, attackRange);
         }
-        else
+    }
+
+    // 🎯 เรียกจาก Animation Event ปกติ (Left Click Attack)
+    public void DealDamage()
+    {
+        ApplyDamage(false);
+    }
+
+    // 🎯 เรียกจาก Animation Event ของ Q Attack
+    public void DealDamageQ()
+    {
+        ApplyDamage(true);
+    }
+
+    // ฟังก์ชันรวมการคำนวณดาเมจ + Stun
+    private void ApplyDamage(bool isQAttack)
+    {
+        // ใช้ตำแหน่งของ attackPoint ในการหาศัตรู
+        if (attackPoint == null)
         {
-            attackPosition.x += attackRange;
+            Debug.LogError("AttackPoint not assigned. Please assign the AttackPoint Transform in the Inspector.");
+            return;
         }
 
-        Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPosition, attackRange, enemyLayer);
-        
-        // สร้าง HashSet เพื่อเก็บ GameObject ของศัตรูที่ถูกโจมตีไปแล้ว
+        Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint.position, attackRange, enemyLayer);
+
         HashSet<GameObject> hitObjects = new HashSet<GameObject>();
 
         foreach (Collider2D enemyCollider in hitEnemies)
         {
-            // ถ้า GameObject ของศัตรูนี้ถูกเพิ่มเข้าไปใน HashSet แล้ว ให้ข้ามไป
-            if (hitObjects.Contains(enemyCollider.gameObject))
-            {
-                continue;
-            }
+            if (hitObjects.Contains(enemyCollider.gameObject)) continue;
 
             Health enemyHealth = enemyCollider.GetComponent<Health>();
             if (enemyHealth != null)
             {
                 enemyHealth.TakeDamage(attackDamage);
-                // เพิ่ม GameObject ของศัตรูลงใน HashSet เพื่อป้องกันการทำดาเมจซ้ำ
                 hitObjects.Add(enemyCollider.gameObject);
+            }
+
+            // ถ้าเป็น QAttack → สั่งให้ติด Stun
+            if (isQAttack)
+            {
+                EnemyController enemyController = enemyCollider.GetComponent<EnemyController>();
+                if (enemyController != null)
+                {
+                    enemyController.Stun(stunDuration);
+
+                    if (stunEffectPrefab != null)
+                    {
+                        Vector3 effectPos = enemyCollider.transform.position + new Vector3(0, 1.5f, 0);
+                        GameObject effect = Instantiate(stunEffectPrefab, effectPos, Quaternion.identity, enemyCollider.transform);
+                        Destroy(effect, stunDuration);
+                    }
+                }
             }
         }
     }
@@ -214,37 +244,21 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("NoJumpZone"))
-        {
-            isInNoJumpZone = true;
-        }
-        else if (other.CompareTag("Ladder"))
-        {
-            isOnLadder = true;
-        }
+        if (other.CompareTag("NoJumpZone")) isInNoJumpZone = true;
+        else if (other.CompareTag("Ladder")) isOnLadder = true;
     }
 
     private void OnTriggerExit2D(Collider2D other)
     {
-        if (other.CompareTag("NoJumpZone"))
-        {
-            isInNoJumpZone = false;
-        }
-        else if (other.CompareTag("Ladder"))
-        {
-            isOnLadder = false;
-            isClimbing = false;
-        }
+        if (other.CompareTag("NoJumpZone")) isInNoJumpZone = false;
+        else if (other.CompareTag("Ladder")) { isOnLadder = false; isClimbing = false; }
     }
 
     private void OnTriggerStay2D(Collider2D other)
     {
         if (other.CompareTag("Ladder") && isOnLadder)
         {
-            if (Input.GetAxisRaw("Vertical") != 0)
-            {
-                isClimbing = true;
-            }
+            if (Input.GetAxisRaw("Vertical") != 0) isClimbing = true;
         }
     }
 }
