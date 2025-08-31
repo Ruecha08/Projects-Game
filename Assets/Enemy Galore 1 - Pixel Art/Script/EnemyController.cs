@@ -9,25 +9,31 @@ public class EnemyController : MonoBehaviour
     public float patrolRange = 5f;
     private Vector2 initialPosition;
     private int moveDirection = 1;
-    public float chaseRange = 8f;
+
+    public float chaseRangeX = 8f;
+    public float chaseRangeY = 4f;
+
     private Transform playerTransform;
-    public float idleTime = 2f; // เพิ่มตัวแปรสำหรับระยะเวลา Idle
+    public float idleTime = 2f;
     private float idleTimer;
-    private bool isPatrolling = false; // เพิ่มสถานะการลาดตระเวน
+    private bool isPatrolling = false;
 
     // ---------------- Combat Variables ----------------
     public float attackRange = 1.5f;
     public float attackCooldown = 2.0f;
     public int attackDamage = 10;
     private float nextAttackTime = 0f;
+    
+    public Transform attackPoint;
+    public LayerMask playerLayer;
 
     // ---------------- Components ----------------
     private Rigidbody2D rb;
     private Animator animator;
 
     // ---------------- Stun Variables ----------------
-    public bool isStunned = false;
-    private float stunTimer = 0f;
+    private bool isStunned = false;
+    private Coroutine stunCoroutine;
     public GameObject stunEffectPrefab;
     private GameObject activeStunEffect;
 
@@ -36,7 +42,7 @@ public class EnemyController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
         initialPosition = transform.position;
-        idleTimer = idleTime; // กำหนดค่าเริ่มต้น
+        idleTimer = idleTime;
 
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player != null)
@@ -47,83 +53,64 @@ public class EnemyController : MonoBehaviour
 
     void Update()
     {
-        // ---------------- จัดการ Stun ----------------
         if (isStunned)
         {
-            HandleStun();
+            rb.velocity = Vector2.zero;
+            animator.SetBool("Run", false);
             return;
         }
         
-        // ---------------- การจัดการพฤติกรรม ----------------
         if (playerTransform != null)
         {
-            float distanceToPlayer = Vector2.Distance(transform.position, playerTransform.position);
-            
-            if (distanceToPlayer <= attackRange)
+            float distanceX = Mathf.Abs(transform.position.x - playerTransform.position.x);
+            float distanceY = Mathf.Abs(transform.position.y - playerTransform.position.y);
+            bool isInChaseRange = (distanceX <= chaseRangeX && distanceY <= chaseRangeY);
+
+            if (isInChaseRange)
             {
-                HandleAttack();
-                isPatrolling = false; // หยุดการลาดตระเวน
-            }
-            else if (distanceToPlayer <= chaseRange)
-            {
-                ChasePlayer();
-                isPatrolling = false; // หยุดการลาดตระเวน
+                float distanceToPlayer = Vector2.Distance(transform.position, playerTransform.position);
+                
+                if (distanceToPlayer <= attackRange)
+                {
+                    HandleAttack();
+                    isPatrolling = false;
+                }
+                else
+                {
+                    ChasePlayer();
+                    isPatrolling = false;
+                }
             }
             else
             {
-                // ถ้าอยู่นอกระยะทั้งหมด
                 if (!isPatrolling)
                 {
-                    // เริ่มสถานะ Idle ก่อน
                     rb.velocity = Vector2.zero;
                     animator.SetBool("Run", false);
                     idleTimer -= Time.deltaTime;
-
                     if (idleTimer <= 0)
                     {
-                        isPatrolling = true; // เมื่อครบเวลาให้เริ่มลาดตระเวน
-                        idleTimer = idleTime; // รีเซ็ตเวลา Idle
+                        isPatrolling = true;
+                        idleTimer = idleTime;
                     }
                 }
                 else
                 {
-                    // ถ้ากำลังลาดตระเวนอยู่แล้ว
                     Patrol();
                 }
             }
         }
         else
         {
-            // ถ้าไม่มีผู้เล่น ให้ลาดตระเวน
             Patrol();
         }
     }
     
-    // ---------------- Handle Stun ----------------
-    void HandleStun()
-    {
-        stunTimer -= Time.deltaTime;
-        rb.velocity = Vector2.zero;
-        animator.SetBool("Run", false);
-        if (stunTimer <= 0)
-        {
-            isStunned = false;
-            animator.SetBool("Stunned", false);
-            if (activeStunEffect != null) Destroy(activeStunEffect);
-        }
-    }
-
-    // ---------------- Handle Attack ----------------
     void HandleAttack()
     {
         rb.velocity = Vector2.zero;
         animator.SetBool("Run", false);
-
-        // หันหน้าเข้าหาผู้เล่น
-        if (playerTransform.position.x > transform.position.x && transform.localScale.x < 0)
-            Flip();
-        else if (playerTransform.position.x < transform.position.x && transform.localScale.x > 0)
-            Flip();
+        FlipToTarget(playerTransform.position);
 
         if (Time.time >= nextAttackTime)
         {
@@ -132,48 +119,53 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    // ---------------- Patrol ----------------
     void Patrol()
     {
-        rb.velocity = new Vector2(moveDirection * moveSpeed, rb.velocity.y);
-        animator.SetBool("Run", true);
-
         if (Mathf.Abs(transform.position.x - initialPosition.x) >= patrolRange)
         {
             moveDirection *= -1;
-            Flip();
+            FlipToTarget(new Vector2(initialPosition.x + (patrolRange * moveDirection), transform.position.y));
         }
+
+        rb.velocity = new Vector2(moveDirection * moveSpeed, rb.velocity.y);
+        animator.SetBool("Run", true);
     }
 
-    // ---------------- Chase ----------------
     void ChasePlayer()
     {
         float directionToPlayer = Mathf.Sign(playerTransform.position.x - transform.position.x);
         rb.velocity = new Vector2(directionToPlayer * moveSpeed, rb.velocity.y);
         animator.SetBool("Run", true);
-
-        // Flip
-        if (directionToPlayer > 0 && transform.localScale.x < 0)
-            Flip();
-        else if (directionToPlayer < 0 && transform.localScale.x > 0)
-            Flip();
+        FlipToTarget(playerTransform.position);
     }
     
-    // ---------------- Deal Damage (ถูกเรียกด้วย Animation Event เท่านั้น) ----------------
-    void DealDamage()
+    public void AttackPlayer()
     {
-        Collider2D[] hitPlayers = Physics2D.OverlapCircleAll(transform.position, attackRange, LayerMask.GetMask("Player"));
+        Collider2D[] hitPlayers = Physics2D.OverlapCircleAll(attackPoint.position, attackRange, playerLayer);
+        
         foreach(Collider2D player in hitPlayers)
         {
-            Health playerHealth = player.GetComponent<Health>();
-            if(playerHealth != null)
+            // 🎯 แก้ไข: เปลี่ยนไปหา PlayerStats แทน PlayerHealth
+            PlayerStats playerStats = player.GetComponent<PlayerStats>();
+            if(playerStats != null)
             {
-                playerHealth.TakeDamage(attackDamage);
+                playerStats.TakeDamage(attackDamage);
             }
         }
     }
 
-    // ---------------- Flip ----------------
+    void FlipToTarget(Vector2 targetPosition)
+    {
+        if (targetPosition.x > transform.position.x && transform.localScale.x < 0)
+        {
+            Flip();
+        }
+        else if (targetPosition.x < transform.position.x && transform.localScale.x > 0)
+        {
+            Flip();
+        }
+    }
+
     void Flip()
     {
         Vector3 newScale = transform.localScale;
@@ -181,13 +173,20 @@ public class EnemyController : MonoBehaviour
         transform.localScale = newScale;
     }
 
-    // ---------------- Stun ----------------
     public void Stun(float duration)
     {
+        if (!isStunned)
+        {
+            if (stunCoroutine != null) StopCoroutine(stunCoroutine); 
+            
+            stunCoroutine = StartCoroutine(StunCoroutine(duration));
+        }
+    }
+    
+    private IEnumerator StunCoroutine(float duration)
+    {
         isStunned = true;
-        stunTimer = duration;
         animator.SetBool("Stunned", true);
-        rb.velocity = Vector2.zero;
 
         if (stunEffectPrefab != null)
         {
@@ -195,9 +194,15 @@ public class EnemyController : MonoBehaviour
             Vector3 effectPos = transform.position + new Vector3(0, 1.5f, 0);
             activeStunEffect = Instantiate(stunEffectPrefab, effectPos, Quaternion.identity, transform);
         }
+        
+        yield return new WaitForSeconds(duration);
+
+        isStunned = false;
+        animator.SetBool("Stunned", false);
+        if (activeStunEffect != null) Destroy(activeStunEffect);
+        activeStunEffect = null;
     }
 
-    // ---------------- Die ----------------
     public void Die()
     {
         animator.SetTrigger("Death");
@@ -205,13 +210,23 @@ public class EnemyController : MonoBehaviour
         Destroy(gameObject, 2f);
     }
 
-    // ---------------- Debug ระยะ ----------------
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, chaseRange);
-
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
+        Gizmos.DrawWireCube(transform.position, new Vector2(chaseRangeX * 2, chaseRangeY * 2));
+        
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireCube(initialPosition, new Vector2(patrolRange * 2, 1));
+        
+        if (attackPoint != null)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(attackPoint.position, attackRange);
+        }
+        else
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(transform.position, attackRange);
+        }
     }
 }
