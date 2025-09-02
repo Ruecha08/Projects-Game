@@ -891,6 +891,7 @@ GameObject:
   - component: {fileID: 911367992}
   - component: {fileID: 911367991}
   - component: {fileID: 911367990}
+  - component: {fileID: 911367993}
   m_Layer: 5
   m_Name: StartButton
   m_TagString: Untagged
@@ -963,16 +964,16 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: MainMenu, Assembly-CSharp
-        m_MethodName: StartGame
-        m_Mode: 1
+      - m_Target: {fileID: 911367993}
+        m_TargetAssemblyTypeName: SceneChanger, Assembly-CSharp
+        m_MethodName: ChangeSceneByName
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: Name
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &911367991
@@ -1013,6 +1014,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 911367988}
   m_CullTransparentMesh: 1
+--- !u!114 &911367993
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 911367988}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 235fcf1f6842ef245a6757f8405dba5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &933993984
 GameObject:
   m_ObjectHideFlags: 0
