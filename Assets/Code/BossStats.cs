@@ -28,7 +28,6 @@ public class BossStats : MonoBehaviour
 
         UpdateHealthBar();
 
-        // ซ่อน UI ตอนเริ่ม
         if (healthBarUI != null)
             healthBarUI.SetActive(false);
     }
@@ -37,7 +36,6 @@ public class BossStats : MonoBehaviour
     {
         if (isDead) return;
 
-        // ตรวจสอบระยะผู้เล่น
         if (player != null && healthBarUI != null)
         {
             float distance = Vector2.Distance(player.position, transform.position);
@@ -88,11 +86,9 @@ public class BossStats : MonoBehaviour
         if (animator != null)
             animator.SetTrigger("Death");
 
-        // เพิ่มคะแนนเมื่อฆ่าบอส
         if (ScoreManager.instance != null)
             ScoreManager.instance.AddScore(scoreValue);
 
-        // ปิด collider + rigidbody
         Collider2D col = GetComponent<Collider2D>();
         if (col != null) col.enabled = false;
 
@@ -103,11 +99,13 @@ public class BossStats : MonoBehaviour
             rb.isKinematic = true;
         }
 
-        // ซ่อนหลอดเลือด
         if (healthBarUI != null)
             healthBarUI.SetActive(false);
 
-        // ทำลายบอสหลัง 2 วินาที
+        // ✅ เปิด Portal เมื่อบอสตาย
+        if (PortalActivator.instance != null)
+            PortalActivator.instance.ActivatePortal();
+
         Destroy(gameObject, 2f);
     }
 }
