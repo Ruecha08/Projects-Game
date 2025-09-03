@@ -3,11 +3,10 @@ using TMPro; // ถ้าใช้ TextMeshPro
 
 public class ScoreManager : MonoBehaviour
 {
-    public static ScoreManager instance; // ✅ ชื่อตรงกับ Health.cs
-
+    public static ScoreManager instance;
     private int score = 0;
-    public TextMeshProUGUI scoreText; // ถ้าใช้ TMP
-    // public Text scoreText; // ถ้าใช้ UI Text ธรรมดา
+
+    public TextMeshProUGUI scoreText; // UI แสดงคะแนน
 
     void Awake()
     {
@@ -17,15 +16,22 @@ public class ScoreManager : MonoBehaviour
             Destroy(gameObject);
     }
 
+    // เพิ่มคะแนน
     public void AddScore(int amount)
     {
         score += amount;
         UpdateScoreUI();
     }
 
+    // ✅ ฟังก์ชัน GetScore() สำหรับเรียกคะแนนปัจจุบัน
+    public int GetScore()
+    {
+        return score;
+    }
+
     private void UpdateScoreUI()
     {
         if (scoreText != null)
-            scoreText.text = " " + score; 
+            scoreText.text = score.ToString(); // แสดงแค่ตัวเลข
     }
 }
