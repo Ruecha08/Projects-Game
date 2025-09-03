@@ -1,14 +1,14 @@
 using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
 
 public class EnemyController : MonoBehaviour
 {
     // ---------------- Movement Variables ----------------
     public float moveSpeed = 2f;
-    public float patrolRange = 5f;
+    public float patrolRangeX = 5f;   // ระยะ Patrol แกน X
+    public float patrolRangeY = 2f;   // ระยะ Patrol แกน Y
     private Vector2 initialPosition;
-    private int moveDirection = 1;
+    private Vector2 moveDirection = Vector2.right;
 
     public float chaseRangeX = 8f;
     public float chaseRangeY = 4f;
@@ -23,7 +23,7 @@ public class EnemyController : MonoBehaviour
     public float attackCooldown = 2.0f;
     public int attackDamage = 10;
     private float nextAttackTime = 0f;
-    
+
     public Transform attackPoint;
     public LayerMask playerLayer;
 
@@ -59,7 +59,7 @@ public class EnemyController : MonoBehaviour
             animator.SetBool("Run", false);
             return;
         }
-        
+
         if (playerTransform != null)
         {
             float distanceX = Mathf.Abs(transform.position.x - playerTransform.position.x);
@@ -69,7 +69,7 @@ public class EnemyController : MonoBehaviour
             if (isInChaseRange)
             {
                 float distanceToPlayer = Vector2.Distance(transform.position, playerTransform.position);
-                
+
                 if (distanceToPlayer <= attackRange)
                 {
                     HandleAttack();
@@ -105,7 +105,7 @@ public class EnemyController : MonoBehaviour
             Patrol();
         }
     }
-    
+
     void HandleAttack()
     {
         rb.velocity = Vector2.zero;
@@ -121,14 +121,26 @@ public class EnemyController : MonoBehaviour
 
     void Patrol()
     {
-        if (Mathf.Abs(transform.position.x - initialPosition.x) >= patrolRange)
+        Vector2 pos = transform.position;
+
+        // เช็กแกน X
+        if (patrolRangeX > 0 && Mathf.Abs(pos.x - initialPosition.x) >= patrolRangeX)
         {
-            moveDirection *= -1;
-            FlipToTarget(new Vector2(initialPosition.x + (patrolRange * moveDirection), transform.position.y));
+            moveDirection.x *= -1;
         }
 
-        rb.velocity = new Vector2(moveDirection * moveSpeed, rb.velocity.y);
+        // เช็กแกน Y
+        if (patrolRangeY > 0 && Mathf.Abs(pos.y - initialPosition.y) >= patrolRangeY)
+        {
+            moveDirection.y *= -1;
+        }
+
+        rb.velocity = moveDirection.normalized * moveSpeed;
         animator.SetBool("Run", true);
+
+        // พลิกตัวละครตามทิศทางการเดินในแกน X เท่านั้น
+        if (moveDirection.x != 0)
+            FlipToTarget(new Vector2(pos.x + moveDirection.x, pos.y));
     }
 
     void ChasePlayer()
@@ -138,16 +150,15 @@ public class EnemyController : MonoBehaviour
         animator.SetBool("Run", true);
         FlipToTarget(playerTransform.position);
     }
-    
+
     public void AttackPlayer()
     {
         Collider2D[] hitPlayers = Physics2D.OverlapCircleAll(attackPoint.position, attackRange, playerLayer);
-        
-        foreach(Collider2D player in hitPlayers)
+
+        foreach (Collider2D player in hitPlayers)
         {
-            // 🎯 แก้ไข: เปลี่ยนไปหา PlayerStats แทน PlayerHealth
             PlayerStats playerStats = player.GetComponent<PlayerStats>();
-            if(playerStats != null)
+            if (playerStats != null)
             {
                 playerStats.TakeDamage(attackDamage);
             }
@@ -177,12 +188,12 @@ public class EnemyController : MonoBehaviour
     {
         if (!isStunned)
         {
-            if (stunCoroutine != null) StopCoroutine(stunCoroutine); 
-            
+            if (stunCoroutine != null) StopCoroutine(stunCoroutine);
+
             stunCoroutine = StartCoroutine(StunCoroutine(duration));
         }
     }
-    
+
     private IEnumerator StunCoroutine(float duration)
     {
         isStunned = true;
@@ -194,7 +205,7 @@ public class EnemyController : MonoBehaviour
             Vector3 effectPos = transform.position + new Vector3(0, 1.5f, 0);
             activeStunEffect = Instantiate(stunEffectPrefab, effectPos, Quaternion.identity, transform);
         }
-        
+
         yield return new WaitForSeconds(duration);
 
         isStunned = false;
@@ -214,10 +225,10 @@ public class EnemyController : MonoBehaviour
     {
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireCube(transform.position, new Vector2(chaseRangeX * 2, chaseRangeY * 2));
-        
+
         Gizmos.color = Color.cyan;
-        Gizmos.DrawWireCube(initialPosition, new Vector2(patrolRange * 2, 1));
-        
+        Gizmos.DrawWireCube(initialPosition, new Vector2(patrolRangeX * 2, patrolRangeY * 2));
+
         if (attackPoint != null)
         {
             Gizmos.color = Color.red;

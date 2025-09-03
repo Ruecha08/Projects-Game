@@ -1,31 +1,38 @@
 using UnityEngine;
-using TMPro; // ใช้ถ้าคุณใช้ TextMeshPro
+using TMPro; // <-- ใช้ TextMeshPro
 
 public class ScoreManager : MonoBehaviour
 {
     public static ScoreManager instance;
+    public TMP_Text scoreText; // เปลี่ยนจาก Text เป็น TMP_Text
 
-    public int score = 0;
-    public TextMeshProUGUI scoreText; // UI ที่จะแสดงคะแนน
+    private int totalScore = 0;
 
-    private void Awake()
+    void Awake()
     {
-        // ทำให้เป็น Singleton (เรียกใช้ได้จาก Coin)
         if (instance == null)
             instance = this;
         else
             Destroy(gameObject);
     }
 
-    public void AddScore(int value)
+    // คะแนนจากเหรียญ
+    public void AddCoinScore(int amount)
     {
-        score += value;
-        UpdateScoreUI();
+        totalScore += amount;
+        UpdateUI();
     }
 
-    private void UpdateScoreUI()
+    // คะแนนจากศัตรู
+    public void AddEnemyScore(int amount)
     {
-        if (scoreText != null)
-            scoreText.text = "Score: " + score.ToString();
+        totalScore += amount;
+        UpdateUI();
+    }
+
+    void UpdateUI()
+    {
+        if(scoreText != null)
+            scoreText.text = totalScore.ToString();
     }
 }

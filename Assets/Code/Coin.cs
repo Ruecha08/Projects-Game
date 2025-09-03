@@ -2,14 +2,16 @@ using UnityEngine;
 
 public class Coin : MonoBehaviour
 {
-    public int coinValue = 1; // ค่าคะแนนต่อเหรียญ
+    public int coinValue = 1;
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    void OnTriggerEnter2D(Collider2D other)
     {
-        if (collision.CompareTag("Player")) // ถ้าชนผู้เล่น
+        if(other.CompareTag("Player"))
         {
-            ScoreManager.instance.AddScore(coinValue); // เพิ่มคะแนน
-            Destroy(gameObject); // ลบเหรียญออกไป
+            if(ScoreManager.instance != null)
+                ScoreManager.instance.AddCoinScore(coinValue);
+
+            Destroy(gameObject);
         }
     }
 }

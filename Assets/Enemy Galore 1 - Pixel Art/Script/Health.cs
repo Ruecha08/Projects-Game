@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.UI; // For the Slider UI component
+using UnityEngine.UI;
 
 public class Health : MonoBehaviour
 {
@@ -8,7 +8,10 @@ public class Health : MonoBehaviour
 
     public Slider healthBarSlider; 
     private Animator animator; 
-    private bool isDead = false; // ✅ ป้องกันการตายซ้ำ
+    private bool isDead = false;
+
+    [Header("Score Settings")]
+    public int scoreValue = 10; // ✅ คะแนนของศัตรู
 
     void Awake()
     {
@@ -23,18 +26,15 @@ public class Health : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
-        if (isDead) return; // ✅ ถ้าตายแล้วไม่โดนซ้ำ
+        if (isDead) return;
 
-        if (currentHealth > 0)
+        if (currentHealth > 0 && animator != null)
         {
-            if (animator != null)
-            {
-                animator.SetTrigger("Hit"); // เล่นอนิเมชันโดนตี
-            }
+            animator.SetTrigger("Hit");
         }
 
         currentHealth -= damage;
-        currentHealth = Mathf.Max(currentHealth, 0); 
+        currentHealth = Mathf.Max(currentHealth, 0);
         UpdateHealthBar();
 
         if (currentHealth <= 0)
@@ -45,7 +45,7 @@ public class Health : MonoBehaviour
 
     public void Heal(float amount)
     {
-        if (isDead) return; // ถ้าตายแล้วห้าม Heal
+        if (isDead) return;
         currentHealth += amount;
         currentHealth = Mathf.Min(currentHealth, maxHealth);
         UpdateHealthBar();
@@ -67,12 +67,18 @@ public class Health : MonoBehaviour
 
         Debug.Log(gameObject.name + " is dead!");
 
-        if (animator != null)
+        // ✅ เพิ่มคะแนนเมื่อศัตรูตาย
+        if (ScoreManager.instance != null)
         {
-            animator.SetTrigger("Death"); // ✅ เล่น Animation Death
+            ScoreManager.instance.AddEnemyScore(scoreValue);
+            Debug.Log("Added score: " + scoreValue);
         }
 
-        // ปิด collider และ rigidbody กันไม่ให้ขยับอีก
+        if (animator != null)
+        {
+            animator.SetTrigger("Death");
+        }
+
         Collider2D col = GetComponent<Collider2D>();
         if (col != null) col.enabled = false;
 
@@ -83,7 +89,6 @@ public class Health : MonoBehaviour
             rb.isKinematic = true;
         }
 
-        // ✅ ทำลาย GameObject หลังอนิเม Death เล่นจบ (2 วินาที หรือปรับตามความยาว animation)
         Destroy(gameObject, 2f);
     }
 }
