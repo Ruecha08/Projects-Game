@@ -1,12 +1,13 @@
 using UnityEngine;
-using TMPro; // <-- ใช้ TextMeshPro
+using TMPro; // ถ้าใช้ TextMeshPro
 
 public class ScoreManager : MonoBehaviour
 {
-    public static ScoreManager instance;
-    public TMP_Text scoreText; // เปลี่ยนจาก Text เป็น TMP_Text
+    public static ScoreManager instance; // ✅ ชื่อตรงกับ Health.cs
 
-    private int totalScore = 0;
+    private int score = 0;
+    public TextMeshProUGUI scoreText; // ถ้าใช้ TMP
+    // public Text scoreText; // ถ้าใช้ UI Text ธรรมดา
 
     void Awake()
     {
@@ -16,23 +17,15 @@ public class ScoreManager : MonoBehaviour
             Destroy(gameObject);
     }
 
-    // คะแนนจากเหรียญ
-    public void AddCoinScore(int amount)
+    public void AddScore(int amount)
     {
-        totalScore += amount;
-        UpdateUI();
+        score += amount;
+        UpdateScoreUI();
     }
 
-    // คะแนนจากศัตรู
-    public void AddEnemyScore(int amount)
+    private void UpdateScoreUI()
     {
-        totalScore += amount;
-        UpdateUI();
-    }
-
-    void UpdateUI()
-    {
-        if(scoreText != null)
-            scoreText.text = totalScore.ToString();
+        if (scoreText != null)
+            scoreText.text = " " + score; 
     }
 }

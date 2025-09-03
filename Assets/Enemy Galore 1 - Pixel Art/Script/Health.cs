@@ -70,7 +70,7 @@ public class Health : MonoBehaviour
         // ✅ เพิ่มคะแนนเมื่อศัตรูตาย
         if (ScoreManager.instance != null)
         {
-            ScoreManager.instance.AddEnemyScore(scoreValue);
+            ScoreManager.instance.AddScore(scoreValue);
             Debug.Log("Added score: " + scoreValue);
         }
 
