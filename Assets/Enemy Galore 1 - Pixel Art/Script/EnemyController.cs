@@ -3,26 +3,22 @@ using System.Collections;
 
 public class EnemyController : MonoBehaviour
 {
-    [Header("Enemy Type")]
-    public bool isBoss = false;   // ✅ กำหนดใน Inspector ว่าตัวนี้เป็นบอสหรือไม่
-
-    [Header("Movement")]
+    // ---------------- Movement Variables ----------------
     public float moveSpeed = 2f;
-    public float patrolRangeX = 5f;
-    public float patrolRangeY = 2f;
-    public float patrolBuffer = 0.1f;
+    public float patrolRangeX = 5f;   // ระยะ Patrol แกน X
+    public float patrolRangeY = 2f;   // ระยะ Patrol แกน Y
     private Vector2 initialPosition;
     private Vector2 moveDirection = Vector2.right;
 
     public float chaseRangeX = 8f;
     public float chaseRangeY = 4f;
 
-    [Header("Idle")]
+    private Transform playerTransform;
     public float idleTime = 2f;
     private float idleTimer;
     private bool isPatrolling = false;
 
-    [Header("Combat")]
+    // ---------------- Combat Variables ----------------
     public float attackRange = 1.5f;
     public float attackCooldown = 2.0f;
     public int attackDamage = 10;
@@ -31,17 +27,15 @@ public class EnemyController : MonoBehaviour
     public Transform attackPoint;
     public LayerMask playerLayer;
 
-    [Header("Components")]
+    // ---------------- Components ----------------
     private Rigidbody2D rb;
     private Animator animator;
 
-    [Header("Stun")]
+    // ---------------- Stun Variables ----------------
     private bool isStunned = false;
     private Coroutine stunCoroutine;
     public GameObject stunEffectPrefab;
     private GameObject activeStunEffect;
-
-    private Transform playerTransform;
 
     void Start()
     {
@@ -51,7 +45,10 @@ public class EnemyController : MonoBehaviour
         idleTimer = idleTime;
 
         GameObject player = GameObject.FindGameObjectWithTag("Player");
-        if (player != null) playerTransform = player.transform;
+        if (player != null)
+        {
+            playerTransform = player.transform;
+        }
     }
 
     void Update()
@@ -125,28 +122,23 @@ public class EnemyController : MonoBehaviour
     void Patrol()
     {
         Vector2 pos = transform.position;
-        float distanceX = pos.x - initialPosition.x;
-        float distanceY = pos.y - initialPosition.y;
 
-        if (patrolRangeX > 0)
+        // เช็กแกน X
+        if (patrolRangeX > 0 && Mathf.Abs(pos.x - initialPosition.x) >= patrolRangeX)
         {
-            if (distanceX >= patrolRangeX - patrolBuffer && moveDirection.x > 0)
-                moveDirection.x = -Mathf.Abs(moveDirection.x);
-            else if (distanceX <= -patrolRangeX + patrolBuffer && moveDirection.x < 0)
-                moveDirection.x = Mathf.Abs(moveDirection.x);
+            moveDirection.x *= -1;
         }
 
-        if (patrolRangeY > 0)
+        // เช็กแกน Y
+        if (patrolRangeY > 0 && Mathf.Abs(pos.y - initialPosition.y) >= patrolRangeY)
         {
-            if (distanceY >= patrolRangeY - patrolBuffer && moveDirection.y > 0)
-                moveDirection.y = -Mathf.Abs(moveDirection.y);
-            else if (distanceY <= -patrolRangeY + patrolBuffer && moveDirection.y < 0)
-                moveDirection.y = Mathf.Abs(moveDirection.y);
+            moveDirection.y *= -1;
         }
 
         rb.velocity = moveDirection.normalized * moveSpeed;
         animator.SetBool("Run", true);
 
+        // พลิกตัวละครตามทิศทางการเดินในแกน X เท่านั้น
         if (moveDirection.x != 0)
             FlipToTarget(new Vector2(pos.x + moveDirection.x, pos.y));
     }
@@ -166,14 +158,23 @@ public class EnemyController : MonoBehaviour
         foreach (Collider2D player in hitPlayers)
         {
             PlayerStats playerStats = player.GetComponent<PlayerStats>();
-            if (playerStats != null) playerStats.TakeDamage(attackDamage);
+            if (playerStats != null)
+            {
+                playerStats.TakeDamage(attackDamage);
+            }
         }
     }
 
     void FlipToTarget(Vector2 targetPosition)
     {
-        if (targetPosition.x > transform.position.x && transform.localScale.x < 0) Flip();
-        else if (targetPosition.x < transform.position.x && transform.localScale.x > 0) Flip();
+        if (targetPosition.x > transform.position.x && transform.localScale.x < 0)
+        {
+            Flip();
+        }
+        else if (targetPosition.x < transform.position.x && transform.localScale.x > 0)
+        {
+            Flip();
+        }
     }
 
     void Flip()
@@ -188,6 +189,7 @@ public class EnemyController : MonoBehaviour
         if (!isStunned)
         {
             if (stunCoroutine != null) StopCoroutine(stunCoroutine);
+
             stunCoroutine = StartCoroutine(StunCoroutine(duration));
         }
     }
@@ -217,12 +219,6 @@ public class EnemyController : MonoBehaviour
         animator.SetTrigger("Death");
         rb.velocity = Vector2.zero;
         Destroy(gameObject, 2f);
-
-        // ✅ เฉพาะบอสเท่านั้นที่จะเปิด Portal
-        if (isBoss && PortalActivator.instance != null)
-        {
-            PortalActivator.instance.ActivatePortal();
-        }
     }
 
     void OnDrawGizmosSelected()
