@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<< HEAD
 guid: f96c6326dd0152e4d904f1d6eb4baaf3
+=======
+guid: e1bb015148b7b1940bd74daa05a21494
+>>>>>>> parent of a889788 (Revert "ก")
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
