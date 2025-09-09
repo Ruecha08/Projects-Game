@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.SceneManagement; // ✅ ใช้สำหรับโหลด Scene
 using MagicPigGames; // ใช้ ProgressBar
 
 public class BossStats : MonoBehaviour
@@ -18,9 +17,6 @@ public class BossStats : MonoBehaviour
 
     [Header("Score Settings")]
     public int scoreValue = 100;        // คะแนนที่ได้เมื่อฆ่าบอส
-
-    [Header("Scene Settings")]
-    public string mainMenuSceneName = "MainMenu"; // ✅ ชื่อ Scene หน้า MainMenu
 
     private Animator animator;
     private bool isDead = false;
@@ -111,12 +107,11 @@ public class BossStats : MonoBehaviour
         if (healthBarUI != null)
             healthBarUI.SetActive(false);
 
-        // ✅ โหลดหน้า MainMenu ทันที (หน่วงเวลาเล็กน้อยให้เล่นอนิเม Death ได้)
-        Invoke(nameof(LoadMainMenu), 2f);
-    }
+        // ✅ เปิดพอร์ทัลแทน (ยังไม่โหลดฉาก)
+        if (PortalActivator.instance != null)
+            PortalActivator.instance.ActivatePortal();
 
-    private void LoadMainMenu()
-    {
-        SceneManager.LoadScene(mainMenuSceneName);
+        // ✅ ทำลายบอสหลัง 2 วินาที (ให้เวลาเล่นแอนิเมชัน Death)
+        Destroy(gameObject, 2f);
     }
 }
