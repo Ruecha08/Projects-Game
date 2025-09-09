@@ -5,9 +5,9 @@ public class EnemyController : MonoBehaviour
 {
     [Header("Movement")]
     public float moveSpeed = 2f;
-    public float patrolRangeX = 5f;   // ระยะ Patrol แกน X
-    public float patrolRangeY = 2f;   // ระยะ Patrol แกน Y
-    public float patrolBuffer = 0.1f; // ระยะเผื่อเริ่มกลับก่อนถึงขอบ
+    public float patrolRangeX = 5f;   
+    public float patrolRangeY = 2f;   
+    public float patrolBuffer = 0.1f; 
     private Vector2 initialPosition;
     private Vector2 moveDirection = Vector2.right;
 
@@ -40,6 +40,9 @@ public class EnemyController : MonoBehaviour
 
     private Transform playerTransform;
 
+    // ✅ เพิ่มตัวแปร
+    private bool isDead = false;
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -53,6 +56,13 @@ public class EnemyController : MonoBehaviour
 
     void Update()
     {
+        if (isDead)  // ✅ ถ้าตายแล้วหยุดการทำงานทั้งหมด
+        {
+            rb.velocity = Vector2.zero;
+            animator.SetBool("Run", false);
+            return;
+        }
+
         if (isStunned)
         {
             rb.velocity = Vector2.zero;
@@ -125,7 +135,6 @@ public class EnemyController : MonoBehaviour
         float distanceX = pos.x - initialPosition.x;
         float distanceY = pos.y - initialPosition.y;
 
-        // แกน X
         if (patrolRangeX > 0)
         {
             if (distanceX >= patrolRangeX - patrolBuffer && moveDirection.x > 0)
@@ -134,7 +143,6 @@ public class EnemyController : MonoBehaviour
                 moveDirection.x = Mathf.Abs(moveDirection.x);
         }
 
-        // แกน Y
         if (patrolRangeY > 0)
         {
             if (distanceY >= patrolRangeY - patrolBuffer && moveDirection.y > 0)
@@ -211,11 +219,19 @@ public class EnemyController : MonoBehaviour
         activeStunEffect = null;
     }
 
+    // ✅ ให้ Health.cs เรียกใช้
     public void Die()
     {
-        animator.SetTrigger("Death");
+        if (isDead) return;
+        isDead = true;
+
         rb.velocity = Vector2.zero;
-        Destroy(gameObject, 2f);
+        rb.isKinematic = true;
+
+        Collider2D col = GetComponent<Collider2D>();
+        if (col != null) col.enabled = false;
+
+        animator.SetBool("Run", false);
     }
 
     void OnDrawGizmosSelected()

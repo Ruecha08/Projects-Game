@@ -15,12 +15,14 @@ public class Health : MonoBehaviour
     [Header("Score Settings")]
     public int scoreValue = 10; // คะแนนที่ได้จากการฆ่าศัตรู
 
-    private EnemyAudio enemyAudio; // ✅ อ้างอิงไปที่สคริปต์ EnemyAudio
+    private EnemyAudio enemyAudio; 
+    private EnemyController enemyController; // ✅ อ้างอิงไปที่ EnemyController
 
     void Awake()
     {
         animator = GetComponent<Animator>();
-        enemyAudio = GetComponent<EnemyAudio>(); // หา EnemyAudio ที่ติดอยู่ในตัวเดียวกัน
+        enemyAudio = GetComponent<EnemyAudio>();
+        enemyController = GetComponent<EnemyController>(); // ✅ หา EnemyController
     }
 
     void Start()
@@ -78,7 +80,7 @@ public class Health : MonoBehaviour
 
         Debug.Log(gameObject.name + " is dead!");
 
-        // ✅ บวกคะแนนเมื่อศัตรูตาย
+        // ✅ บวกคะแนน
         if (ScoreManager.instance != null)
         {
             ScoreManager.instance.AddScore(scoreValue);
@@ -96,15 +98,10 @@ public class Health : MonoBehaviour
             enemyAudio.PlayDeathSound();
         }
 
-        // ปิดการชนและฟิสิกส์
-        Collider2D col = GetComponent<Collider2D>();
-        if (col != null) col.enabled = false;
-
-        Rigidbody2D rb = GetComponent<Rigidbody2D>();
-        if (rb != null)
+        // ✅ เรียก EnemyController ให้หยุดการเคลื่อนไหว
+        if (enemyController != null)
         {
-            rb.velocity = Vector2.zero;
-            rb.isKinematic = true;
+            enemyController.Die();
         }
 
         // ลบ object หลังจาก 2 วินาที
