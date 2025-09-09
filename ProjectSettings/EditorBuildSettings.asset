@@ -12,6 +12,6 @@ EditorBuildSettings:
     path: Assets/Scenes/Name.unity
     guid: 9f58478adc4ccc64e95f797f056d9c71
   - enabled: 1
-    path: Assets/2D Pixel Art Platformer Biome - American Forest/MapONE.unity
+    path: Assets/Scenes/MapONE.unity
     guid: f9b1d789aeb2db941be6e4a862d52c1d
   m_configObjects: {}
