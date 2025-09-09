@@ -3,19 +3,24 @@ using UnityEngine.UI;
 
 public class Health : MonoBehaviour
 {
-    public float maxHealth = 100f; 
+    [Header("Health Settings")]
+    public float maxHealth = 100f;
     public float currentHealth;
 
-    public Slider healthBarSlider; 
-    private Animator animator; 
+    [Header("UI")]
+    public Slider healthBarSlider;
+    private Animator animator;
     private bool isDead = false;
 
     [Header("Score Settings")]
-    public int scoreValue = 10; // ✅ คะแนนของศัตรู
+    public int scoreValue = 10; // คะแนนที่ได้จากการฆ่าศัตรู
+
+    private EnemyAudio enemyAudio; // ✅ อ้างอิงไปที่สคริปต์ EnemyAudio
 
     void Awake()
     {
         animator = GetComponent<Animator>();
+        enemyAudio = GetComponent<EnemyAudio>(); // หา EnemyAudio ที่ติดอยู่ในตัวเดียวกัน
     }
 
     void Start()
@@ -31,6 +36,12 @@ public class Health : MonoBehaviour
         if (currentHealth > 0 && animator != null)
         {
             animator.SetTrigger("Hit");
+        }
+
+        // ✅ เล่นเสียงบาดเจ็บ
+        if (enemyAudio != null)
+        {
+            enemyAudio.PlayHurtSound();
         }
 
         currentHealth -= damage;
@@ -51,7 +62,7 @@ public class Health : MonoBehaviour
         UpdateHealthBar();
     }
 
-    public void UpdateHealthBar()
+    void UpdateHealthBar()
     {
         if (healthBarSlider != null)
         {
@@ -67,7 +78,7 @@ public class Health : MonoBehaviour
 
         Debug.Log(gameObject.name + " is dead!");
 
-        // ✅ เพิ่มคะแนนเมื่อศัตรูตาย
+        // ✅ บวกคะแนนเมื่อศัตรูตาย
         if (ScoreManager.instance != null)
         {
             ScoreManager.instance.AddScore(scoreValue);
@@ -79,6 +90,13 @@ public class Health : MonoBehaviour
             animator.SetTrigger("Death");
         }
 
+        // ✅ เล่นเสียงตาย
+        if (enemyAudio != null)
+        {
+            enemyAudio.PlayDeathSound();
+        }
+
+        // ปิดการชนและฟิสิกส์
         Collider2D col = GetComponent<Collider2D>();
         if (col != null) col.enabled = false;
 
@@ -89,6 +107,7 @@ public class Health : MonoBehaviour
             rb.isKinematic = true;
         }
 
+        // ลบ object หลังจาก 2 วินาที
         Destroy(gameObject, 2f);
     }
 }
