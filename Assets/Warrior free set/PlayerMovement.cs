@@ -98,7 +98,7 @@ public class PlayerMovement : MonoBehaviour
         if (isGrounded && !isDashing)
             jumpCount = 0;
 
-        // Dash input
+        // Dash input (คีย์บอร์ด)
         if (!isDashing && Input.GetKeyDown(KeyCode.LeftShift) && Time.time >= lastDashTime + dashCooldown && currentMana >= dashManaCost)
         {
             StartDash();
@@ -130,15 +130,16 @@ public class PlayerMovement : MonoBehaviour
             rb.gravityScale = normalGravity;
         }
 
-        // Move
-        moveInput = Input.GetAxisRaw("Horizontal");
-        rb.velocity = new Vector2(moveInput * moveSpeed, rb.velocity.y);
+        // Move (คีย์บอร์ด/มือถือ)
+        float keyboardInput = Input.GetAxisRaw("Horizontal"); 
+        float finalInput = keyboardInput != 0 ? keyboardInput : moveInput; // ถ้ามีคีย์บอร์ด ใช้คีย์บอร์ดก่อน
+        rb.velocity = new Vector2(finalInput * moveSpeed, rb.velocity.y);
 
         // Flip character
-        if (moveInput != 0)
-            transform.localScale = new Vector3(Mathf.Sign(moveInput) * Mathf.Abs(originalScale.x), originalScale.y, originalScale.z);
+        if (finalInput != 0)
+            transform.localScale = new Vector3(Mathf.Sign(finalInput) * Mathf.Abs(originalScale.x), originalScale.y, originalScale.z);
 
-        // Jump
+        // Jump (คีย์บอร์ด Space)
         if (isGrounded) animator.SetBool("isJumping", false);
 
         if (Input.GetKeyDown(KeyCode.Space) && !isInNoJumpZone)
@@ -151,14 +152,14 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-        // Attack
+        // Attack (คลิกซ้าย)
         if (Input.GetMouseButtonDown(0) && Time.time >= lastAttackTime + attackCooldown)
         {
             animator.SetTrigger("Attack");
             lastAttackTime = Time.time;
         }
 
-        // Q Attack
+        // Q Attack (กด Q)
         if (Input.GetKeyDown(KeyCode.Q) && Time.time >= lastQAttackTime + qAttackCooldown && currentMana >= qAttackManaCost)
         {
             animator.SetTrigger("QAttack");
@@ -168,7 +169,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         // Animator
-        animator.SetBool("isplayerRun", moveInput != 0);
+        animator.SetBool("isplayerRun", finalInput != 0);
         animator.SetBool("isGrounded", isGrounded);
         animator.SetFloat("yVelocity", rb.velocity.y);
         animator.SetBool("isFalling", !isGrounded && rb.velocity.y < -0.1f);
@@ -277,6 +278,59 @@ public class PlayerMovement : MonoBehaviour
         if (other.CompareTag("Ladder") && isOnLadder)
         {
             if (Input.GetAxisRaw("Vertical") != 0) isClimbing = true;
+        }
+    }
+
+    // -------------------------------
+    // 📱 ฟังก์ชันสำหรับปุ่มมือถือ
+    // -------------------------------
+
+    // เดิน
+    public void MoveRightButtonDown() => moveInput = 1f;
+    public void MoveLeftButtonDown() => moveInput = -1f;
+    public void MoveButtonUp() => moveInput = 0f;
+
+    // กระโดด
+    public void JumpButton()
+    {
+        if (isGrounded || jumpCount < maxJumpCount)
+        {
+            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+            jumpCount++;
+            animator.SetBool("isJumping", true);
+        }
+    }
+
+    // Dash
+    public void DashButton()
+    {
+        if (!isDashing && Time.time >= lastDashTime + dashCooldown && currentMana >= dashManaCost)
+        {
+            StartDash();
+            currentMana -= dashManaCost;
+            UpdateManaBar();
+        }
+    }
+
+    // โจมตี
+    public void AttackButton()
+    {
+        if (Time.time >= lastAttackTime + attackCooldown)
+        {
+            animator.SetTrigger("Attack");
+            lastAttackTime = Time.time;
+        }
+    }
+
+    // Q Attack
+    public void QAttackButton()
+    {
+        if (Time.time >= lastQAttackTime + qAttackCooldown && currentMana >= qAttackManaCost)
+        {
+            animator.SetTrigger("QAttack");
+            lastQAttackTime = Time.time;
+            currentMana -= qAttackManaCost;
+            UpdateManaBar();
         }
     }
 }

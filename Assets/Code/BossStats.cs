@@ -18,6 +18,12 @@ public class BossStats : MonoBehaviour
     [Header("Score Settings")]
     public int scoreValue = 100;        // คะแนนที่ได้เมื่อฆ่าบอส
 
+    [Header("Audio Settings")]
+    public AudioSource audioSource;     // AudioSource ของบอส
+    public AudioClip attackSound;       // เสียงโจมตี
+    public AudioClip hurtSound;         // เสียงโดนโจมตี
+    public AudioClip deathSound;        // เสียงตอนตาย
+
     private Animator animator;
     private bool isDead = false;
 
@@ -51,6 +57,8 @@ public class BossStats : MonoBehaviour
 
         if (animator != null)
             animator.SetTrigger("Hit");
+
+        PlayHurt(); // ✅ เล่นเสียงโดนตี
 
         currentHealth -= damage;
         currentHealth = Mathf.Max(currentHealth, 0);
@@ -88,6 +96,8 @@ public class BossStats : MonoBehaviour
         if (animator != null)
             animator.SetTrigger("Death");
 
+        PlayDeath(); // ✅ เล่นเสียงตาย
+
         // ✅ เพิ่มคะแนนเมื่อฆ่าบอส
         if (ScoreManager.instance != null)
             ScoreManager.instance.AddScore(scoreValue);
@@ -113,5 +123,26 @@ public class BossStats : MonoBehaviour
 
         // ✅ ทำลายบอสหลัง 2 วินาที (ให้เวลาเล่นแอนิเมชัน Death)
         Destroy(gameObject, 2f);
+    }
+
+    // ----------------------------
+    // ฟังก์ชันเสียง
+    // ----------------------------
+    public void PlayAttack()
+    {
+        if (audioSource != null && attackSound != null)
+            audioSource.PlayOneShot(attackSound);
+    }
+
+    private void PlayHurt()
+    {
+        if (audioSource != null && hurtSound != null)
+            audioSource.PlayOneShot(hurtSound);
+    }
+
+    private void PlayDeath()
+    {
+        if (audioSource != null && deathSound != null)
+            audioSource.PlayOneShot(deathSound);
     }
 }
